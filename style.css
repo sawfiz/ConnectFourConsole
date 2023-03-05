@@ -1,0 +1,36 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* border: 1px solid red; */
+  font-family:'Courier New', Courier, monospace;
+}
+
+.board {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+.cell {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid black;
+  margin: 0 5px;
+  cursor: pointer;
+}
+
+.cell.player-1 {
+  background-color: red;
+}
+
+.cell.player-2 {
+  background-color: yellow;
+}

@@ -21,13 +21,21 @@ function Gameboard() {
     }
   }
 
+  const clearBoard = () => {
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        board[row][column].setValue(0);
+      }
+    }
+  };
+
   // This will be the method of getting the entire board that our
   // UI will eventually need to render it.
   const getBoard = () => board;
 
   // In order to drop a token, we need to find what the lowest point of the
   // selected column is,  *then* change that cell's value to the player number
-  const dropToken = (column, player) => {
+  const dropToken = (column, token) => {
     // Our board's outermost array represents the row,
     // so we need to loop through the rows, starting at row 0,
     // find all the rows that don't have a token, then take the
@@ -59,11 +67,74 @@ function Gameboard() {
 
     // If no cells make it through the filter,
     // the move is invalid.  Stop execution.
-    if (!availableCells.length) return;
+    if (!availableCells.length) {
+      console.log('No more available cell in this column');
+      return;
+    }
 
     // Otherwise, I have a valid cell, the last one in the filtered array
     const lowestRow = availableCells.length - 1;
-    board[lowestRow][column].addToken(player);
+    board[lowestRow][column].setValue(token);
+    return lowestRow;
+  };
+
+  // Check if a move at a given row and column is a winning move for a given player
+  const isWinningMove = (row, column, token) => {
+    let count = 0;
+
+    // Check for 4 in a row
+    for (let c = 0; c < columns; c++) {
+      if (board[row][c].getValue() === token) {
+        count++;
+        if (count === 4) {
+          return true;
+        }
+      } else {
+        count = 0;
+      }
+    }
+
+    // Check for 4 in a column
+    count = 0;
+    for (let r = 0; r < rows; r++) {
+      if (board[r][column].getValue() === token) {
+        count++;
+        if (count === 4) {
+          return true;
+        }
+      } else {
+        count = 0;
+      }
+    }
+
+    // Check for 4 in a diagonal
+    count = 0;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < columns; c++) {
+        if (
+          r + 3 < rows &&
+          c + 3 < columns &&
+          board[r][c].getValue() === token &&
+          board[r + 1][c + 1].getValue() === token &&
+          board[r + 2][c + 2].getValue() === token &&
+          board[r + 3][c + 3].getValue() === token
+        ) {
+          return true;
+        }
+        if (
+          r + 3 < rows &&
+          c - 3 >= 0 &&
+          board[r][c].getValue() === token &&
+          board[r + 1][c - 1].getValue() === token &&
+          board[r + 2][c - 2].getValue() === token &&
+          board[r + 3][c - 3].getValue() === token
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   };
 
   // This method will be used to print our board to the console.
@@ -71,15 +142,21 @@ function Gameboard() {
   // but we won't need it after we build our UI.
   // ^ Use nested map functions to map a 2D array of Cell objects to a 2D array of values
   const printBoard = () => {
+    console.log(
+      board
+        .map((row) => row.map((cell) => cell.getValue()).join(' '))
+        .join('\n')
+    );
+    // * Display the board in text, rather than having to click open the object
     const boardWithCellValues = board.map((row) =>
       row.map((Cell) => Cell.getValue())
     );
-    console.log(boardWithCellValues);
+    return boardWithCellValues;
   };
 
   // Here we provide an interface for the rest of our
   // application to interact with the board
-  return { getBoard, dropToken, printBoard };
+  return { clearBoard, getBoard, dropToken, isWinningMove, printBoard };
 }
 
 /*
@@ -94,15 +171,15 @@ function Cell() {
 
   // Accept a player's token to change the value of the cell
   // * This is a SETTER functon for value
-  const addToken = (player) => {
-    value = player;
+  const setValue = (token) => {
+    value = token;
   };
 
   // How we will retrieve the current value of this cell through closure
   // * This is a GETTER function for value
   const getValue = () => value;
 
-  return { addToken, getValue };
+  return { setValue, getValue };
 }
 
 /*
@@ -117,6 +194,8 @@ function GameController(
   const board = Gameboard();
   // console.log(board.getBoard());
 
+  const display = Display();
+
   const players = [
     { name: playerOneName, token: 1 },
     { name: playerTwoName, token: 2 },
@@ -130,10 +209,10 @@ function GameController(
 
   const getActivePlayer = () => activePlayer;
 
-  const printNewRound = () => {
-    board.printBoard();
-    // console.log(`${getActivePlayer().name}'s turn`);
-  };
+  // const printNewRound = () => {
+  //   board.printBoard();
+  //   // console.log(`${getActivePlayer().name}'s turn`);
+  // };
 
   const playRound = (column) => {
     // Drop a token for the current player
@@ -141,17 +220,26 @@ function GameController(
       `Dropping ${getActivePlayer().name}'s token into column ${column}...`
     );
 
-    board.dropToken(column, getActivePlayer().token);
+    const row = board.dropToken(column, getActivePlayer().token);
+    display.refreshDisplay(board.printBoard())
 
-    /* This is where we would check for a winner and handle that logic, such as a win message */
-
-    // Swithch player turn
-    switchPlayerTurn();
-    printNewRound();
+    if (board.isWinningMove(row, column, getActivePlayer().token)) {
+      /* This is where we would check for a winner and handle that logic, such as a win message */
+      console.log(`${getActivePlayer().name} won`);
+      console.log("New game...");
+      board.clearBoard();
+      display.refreshDisplay(board.printBoard())
+    } else {
+      // Swithch player turn
+      switchPlayerTurn();
+    }
   };
-
+  
   // Initial play game message
-  printNewRound();
+  // printNewRound();
+  console.log("New game...");
+  display.refreshDisplay(board.printBoard())
+
 
   // For the console version, we will only use playRound, but we will need
   // getActivePlayer for the UI version, so I'm revealing it now
@@ -160,5 +248,31 @@ function GameController(
     getActivePlayer,
   };
 }
+
+const Display= () => {
+  const boardEl = document.querySelector('.board')
+
+  const refreshDisplay = (board) => {
+    boardEl.innerHTML = ""
+    for (let row = 0; row < board.length; row++) {
+      const rowEl = document.createElement('div');
+      rowEl.classList.add('row')
+      boardEl.appendChild(rowEl)
+        for (let column = 0; column < board[row].length; column++) {
+          const cellEl = document.createElement('div')
+          cellEl.classList.add('cell')
+          if (board[row][column] === 1 ) {
+            cellEl.classList.add('player-1')
+          }
+          if (board[row][column] === 2 ){
+            cellEl.classList.add('player-2')
+          }
+          rowEl.appendChild(cellEl)
+        } 
+    }
+  }
+  return {refreshDisplay}
+}
+
 
 const game = GameController();
