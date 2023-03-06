@@ -194,8 +194,6 @@ function GameController(
   const board = Gameboard();
   // console.log(board.getBoard());
 
-  const display = Display();
-
   const players = [
     { name: playerOneName, token: 1 },
     { name: playerTwoName, token: 2 },
@@ -221,58 +219,96 @@ function GameController(
     );
 
     const row = board.dropToken(column, getActivePlayer().token);
-    display.refreshDisplay(board.printBoard())
+    board.printBoard();
 
     if (board.isWinningMove(row, column, getActivePlayer().token)) {
       /* This is where we would check for a winner and handle that logic, such as a win message */
       console.log(`${getActivePlayer().name} won`);
-      console.log("New game...");
+      console.log('New game...');
       board.clearBoard();
-      display.refreshDisplay(board.printBoard())
+      board.printBoard();
     } else {
       // Swithch player turn
       switchPlayerTurn();
     }
   };
-  
+
   // Initial play game message
   // printNewRound();
-  console.log("New game...");
-  display.refreshDisplay(board.printBoard())
-
+  console.log('New game...');
+  board.printBoard();
 
   // For the console version, we will only use playRound, but we will need
   // getActivePlayer for the UI version, so I'm revealing it now
   return {
     playRound,
     getActivePlayer,
+    getBoard: board.getBoard,
   };
 }
 
-const Display= () => {
-  const boardEl = document.querySelector('.board')
+const ScreenController = () => {
+  const game = GameController();
+  const boardEl = document.querySelector('.board');
 
-  const refreshDisplay = (board) => {
-    boardEl.innerHTML = ""
-    for (let row = 0; row < board.length; row++) {
-      const rowEl = document.createElement('div');
-      rowEl.classList.add('row')
-      boardEl.appendChild(rowEl)
-        for (let column = 0; column < board[row].length; column++) {
-          const cellEl = document.createElement('div')
-          cellEl.classList.add('cell')
-          if (board[row][column] === 1 ) {
-            cellEl.classList.add('player-1')
-          }
-          if (board[row][column] === 2 ){
-            cellEl.classList.add('player-2')
-          }
-          rowEl.appendChild(cellEl)
-        } 
-    }
+  const updateScreen = () => {
+    boardEl.innerHTML = '';
+
+    const board = game.getBoard();
+
+    //   for (let row = 0; row < board.length; row++) {
+    //     const rowEl = document.createElement('div');
+    //     rowEl.classList.add('row');
+    //     boardEl.appendChild(rowEl);
+    //     for (let column = 0; column < board[row].length; column++) {
+    //       const cellEl = document.createElement('div');
+    //       cellEl.classList.add('cell');
+    //       if (board[row][column] === 1) {
+    //         cellEl.classList.add('player-1');
+    //       }
+    //       if (board[row][column] === 2) {
+    //         cellEl.classList.add('player-2');
+    //       }
+    //       rowEl.appendChild(cellEl);
+    //     }
+    //   }
+    // };
+
+    // Render board squares
+    board.forEach((row) => {
+      row.forEach((cell, index) => {
+        // Anything clickable should be a button!!
+        const cellButton = document.createElement('button');
+        cellButton.classList.add('cell');
+        // Create a data attribute to identify the column
+        // This makes it easier to pass into our `playRound` function
+        cellButton.dataset.row = board.indexOf(row);
+        cellButton.dataset.column = index;
+        cellButton.textContent = cell.getValue();
+        if (board[board.indexOf(row)][index].getValue() === 1) {
+          cellButton.classList.add('player-1');
+        }
+        if (board[board.indexOf(row)][index].getValue() === 2) {
+          cellButton.classList.add('player-2');
+        }
+        boardEl.appendChild(cellButton);
+      });
+    });
+  };
+
+  function clickHandlerBoard(e) {
+    console.log(e);
+    console.log(e.target.dataset);
+    const selectedColumn = e.target.dataset.column;
+
+    if (!selectedColumn) return;
+
+    game.playRound(selectedColumn);
+    updateScreen();
   }
-  return {refreshDisplay}
-}
+  boardEl.addEventListener('click', clickHandlerBoard);
 
+  updateScreen();
+};
 
-const game = GameController();
+ScreenController();

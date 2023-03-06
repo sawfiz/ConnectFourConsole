@@ -7,9 +7,15 @@
 }
 
 .board {
-  display: flex;
-  flex-direction: column; 
-  align-items: center;
+  display: grid;
+  height: 500px;
+  width: 500px;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  border: 1px solid black;
+  gap: 2px;
+  padding: 2px;
+  background-color: yellow;
 }
 
 .row {
@@ -25,6 +31,7 @@
   border: 1px solid black;
   margin: 0 5px;
   cursor: pointer;
+  font-size: 1.5rem;
 }
 
 .cell.player-1 {
@@ -32,5 +39,5 @@
 }
 
 .cell.player-2 {
-  background-color: yellow;
+  background-color: green;
 }
