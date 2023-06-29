@@ -170,7 +170,7 @@ function Cell() {
   let value = 0;
 
   // Accept a player's token to change the value of the cell
-  // * This is a SETTER functon for value
+  // * This is a SETTER function for value
   const setValue = (token) => {
     value = token;
   };
@@ -228,7 +228,7 @@ function GameController(
       board.clearBoard();
       board.printBoard();
     } else {
-      // Swithch player turn
+      // Switch player turn
       switchPlayerTurn();
     }
   };
